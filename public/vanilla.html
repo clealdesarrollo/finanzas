@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinanControl - Versión Vanilla SPA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #059669;
+      --primary-hover: #047857;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    .dark {
+      --bg: #020617;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.2s, color 0.2s; }
+    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; }
+    .brand-logo { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    nav { display: flex; gap: 0.5rem; }
+    button, input, select { font-family: inherit; }
+    .nav-btn { background: none; border: none; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .nav-btn.active { background: rgba(5, 150, 105, 0.1); color: var(--primary); }
+    .tabular-nums { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; flex: 1; width: 100%; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03); margin-bottom: 1rem; }
+    .grid-4 { display: grid; grid-cols: 1; gap: 1rem; }
+    @media(min-width: 640px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media(min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, 1fr); } }
+    .btn { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .input-group { margin-bottom: 0.75rem; }
+    .input-group label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; color: var(--text-muted); }
+    .input-control { width: 100%; padding: 0.5rem 0.75rem; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); }
+    .progress-bar-bg { width: 100%; height: 8px; background: rgba(100, 116, 139, 0.15); border-radius: 999px; overflow: hidden; margin-top: 0.5rem; }
+    .progress-bar-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.3s; }
+    .alert-banner { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--border); }
+    .alert-danger { background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.3); color: var(--danger); font-weight: 600; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 50; }
+    .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; max-width: 450px; width: 90%; padding: 1.5rem; }
+    footer { text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">F</div>
+      <span>FinanControl</span>
+    </div>
+    <nav id="nav-tabs" style="display: none;">
+      <button class="nav-btn active" onclick="mostrarSeccion('panel')">Panel</button>
+      <button class="nav-btn" onclick="mostrarSeccion('movimientos')">Movimientos</button>
+      <button class="nav-btn" onclick="mostrarSeccion('presupuestos')">Presupuestos</button>
+      <button class="nav-btn" onclick="mostrarSeccion('metas')">Metas</button>
+      <button class="nav-btn" onclick="mostrarSeccion('categorias')">Categorías</button>
+    </nav>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button class="btn btn-outline" onclick="toggleTema()" style="padding: 0.35rem 0.65rem;">🌓</button>
+      <span id="user-info" style="font-size: 0.75rem; font-weight: 600; display: none;"></span>
+      <button id="logout-btn" class="btn btn-outline" style="color: var(--danger); display: none;" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Vista de Autenticación -->
+    <div id="auth-view" style="max-width: 420px; margin: 3rem auto;" class="card">
+      <h2 id="auth-title" style="text-align: center; margin-bottom: 0.5rem; font-size: 1.25rem;">Iniciar Sesión</h2>
+      <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.25rem;">Control de finanzas personales en COP</p>
+      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <button id="tab-login" class="btn" style="flex: 1;" onclick="setAuthTab('login')">Ingreso</button>
+        <button id="tab-reg" class="btn btn-outline" style="flex: 1;" onclick="setAuthTab('registro')">Registro</button>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div id="nombre-group" class="input-group" style="display: none;">
+          <label>Nombre Completo</label>
+          <input type="text" id="reg-nombre" class="input-control" placeholder="Ej. Ana Morales">
+        </div>
+        <div class="input-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="auth-correo" required class="input-control" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="input-group">
+          <label>Contraseña (mín. 6 caracteres)</label>
+          <input type="password" id="auth-pass" required minlength="6" class="input-control" placeholder="••••••••">
+        </div>
+        <div id="habeas-group" style="display: none; margin: 0.75rem 0; font-size: 0.75rem;">
+          <label style="display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="auth-habeas" style="margin-top: 2px;">
+            <span>Acepto política de tratamiento de datos personales (Ley 1581 de 2012 Colombia).</span>
+          </label>
+        </div>
+        <button type="submit" id="auth-submit-btn" class="btn" style="width: 100%; margin-top: 0.5rem;">Entrar</button>
+      </form>
+      <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); text-align: center;">
+        <button type="button" class="btn btn-outline" style="width: 100%; font-size: 0.8rem; font-weight: 700; color: var(--primary);" onclick="iniciarDemoVanilla()">🚀 Probar Demo sin Servidor</button>
+      </div>
+    </div>
+
+    <!-- Vista de Panel (Dashboard) -->
+    <div id="panel-view" style="display: none;">
+      <div id="alertas-container"></div>
+      <div class="grid-4" style="margin-bottom: 1.5rem;">
+        <div class="card">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Ingresos del Mes</span>
+          <h3 id="kpi-ingresos" class="tabular-nums" style="font-size: 1.35rem; color: var(--primary); margin-top: 0.25rem;">$ 0</h3>
+        </div>
+        <div class="card">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Gastos del Mes</span>
+          <h3 id="kpi-gastos" class="tabular-nums" style="font-size: 1.35rem; color: var(--danger); margin-top: 0.25rem;">$ 0</h3>
+        </div>
+        <div class="card">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Balance del Mes</span>
+          <h3 id="kpi-balance-mes" class="tabular-nums" style="font-size: 1.35rem; margin-top: 0.25rem;">$ 0</h3>
+        </div>
+        <div class="card">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Balance General</span>
+          <h3 id="kpi-balance-gen" class="tabular-nums" style="font-size: 1.35rem; margin-top: 0.25rem;">$ 0</h3>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: 0.95rem; margin-bottom: 1rem;">Distribución de Gastos por Categoría</h3>
+        <div id="barras-categorias" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    FinanControl &copy; 2026 &middot; Node.js 20 + Express + SQLite / PostgreSQL &middot; Ley 1581 de 2012
+  </footer>
+
+  <script>
+    let authMode = 'login';
+    let currentUser = null;
+
+    function formatCOP(v) {
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v || 0);
+    }
+
+    function toggleTema() {
+      document.body.classList.toggle('dark');
+    }
+
+    function setAuthTab(mode) {
+      authMode = mode;
+      document.getElementById('auth-title').innerText = mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta';
+      document.getElementById('tab-login').className = mode === 'login' ? 'btn' : 'btn btn-outline';
+      document.getElementById('tab-reg').className = mode === 'registro' ? 'btn' : 'btn btn-outline';
+      document.getElementById('nombre-group').style.display = mode === 'registro' ? 'block' : 'none';
+      document.getElementById('habeas-group').style.display = mode === 'registro' ? 'block' : 'none';
+      document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'Entrar' : 'Registrarme';
+    }
+
+    function mostrarErrorAuth(msg) {
+      let errDiv = document.getElementById('auth-error-msg');
+      if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.id = 'auth-error-msg';
+        errDiv.className = 'alert-banner alert-danger';
+        document.getElementById('auth-form').prepend(errDiv);
+      }
+      errDiv.innerText = msg;
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const correo = document.getElementById('auth-correo').value;
+      const contrasena = document.getElementById('auth-pass').value;
+
+      if (authMode === 'registro') {
+        const nombre = document.getElementById('reg-nombre').value;
+        const acepta = document.getElementById('auth-habeas').checked;
+        if (!acepta) { mostrarErrorAuth('Debe aceptar la política de tratamiento de datos (Ley 1581 de 2012).'); return; }
+
+        const res = await fetch('/api/auth/registro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, correo, contrasena, acepta_tratamiento_datos: true })
+        });
+        const data = await res.json();
+        if (res.ok) { currentUser = data.usuario; initApp(); }
+        else { mostrarErrorAuth(data.error || 'Error al registrar.'); }
+      } else {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
+        });
+        const data = await res.json();
+        if (res.ok) { currentUser = data.usuario; initApp(); }
+        else { mostrarErrorAuth(data.error || 'Credenciales inválidas.'); }
+      }
+    }
+
+    async function initApp() {
+      document.getElementById('auth-view').style.display = 'none';
+      document.getElementById('nav-tabs').style.display = 'flex';
+      document.getElementById('logout-btn').style.display = 'block';
+      document.getElementById('user-info').style.display = 'block';
+      document.getElementById('user-info').innerText = currentUser.nombre;
+      mostrarSeccion('panel');
+    }
+
+    function iniciarDemoVanilla() {
+      currentUser = { id_usuario: 1, nombre: 'Usuario Demo (Sin Servidor)', correo: 'demo@financontrol.co' };
+      localStorage.setItem('vanilla_demo', 'true');
+      initApp();
+    }
+
+    async function mostrarSeccion(sec) {
+      if (sec === 'panel') {
+        document.getElementById('panel-view').style.display = 'block';
+        let d = null;
+        try {
+          if (localStorage.getItem('vanilla_demo') === 'true') {
+            d = {
+              ingresos_mes: 3800000,
+              gastos_mes: 755000,
+              balance_mes: 3045000,
+              balance_general: 3045000,
+              gastos_por_categoria: [
+                { nombre_categoria: 'Alimentación', total_gasto: 450000, porcentaje: 59.6 },
+                { nombre_categoria: 'Transporte', total_gasto: 185000, porcentaje: 24.5 },
+                { nombre_categoria: 'Ocio', total_gasto: 120000, porcentaje: 15.9 },
+              ]
+            };
+          } else {
+            const res = await fetch('/api/panel');
+            if (res.ok) d = await res.json();
+          }
+        } catch {
+          // Fallback offline
+          d = {
+            ingresos_mes: 3800000,
+            gastos_mes: 755000,
+            balance_mes: 3045000,
+            balance_general: 3045000,
+            gastos_por_categoria: [
+              { nombre_categoria: 'Alimentación', total_gasto: 450000, porcentaje: 59.6 },
+              { nombre_categoria: 'Transporte', total_gasto: 185000, porcentaje: 24.5 },
+              { nombre_categoria: 'Ocio', total_gasto: 120000, porcentaje: 15.9 },
+            ]
+          };
+        }
+
+        if (d) {
+          document.getElementById('kpi-ingresos').innerText = formatCOP(d.ingresos_mes);
+          document.getElementById('kpi-gastos').innerText = formatCOP(d.gastos_mes);
+          document.getElementById('kpi-balance-mes').innerText = formatCOP(d.balance_mes);
+          document.getElementById('kpi-balance-gen').innerText = formatCOP(d.balance_general);
+
+          const barCont = document.getElementById('barras-categorias');
+          barCont.innerHTML = '';
+          d.gastos_por_categoria.forEach(c => {
+            barCont.innerHTML += `
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                  <span>${c.nombre_categoria}</span>
+                  <span class="tabular-nums font-bold">${formatCOP(c.total_gasto)} (${c.porcentaje}%)</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${c.porcentaje}%;"></div>
+                </div>
+              </div>
+            `;
+          });
+        }
+      }
+    }
+
+    async function cerrarSesion() {
+      localStorage.removeItem('vanilla_demo');
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
+      location.reload();
+    }
+
+    // Auto-check sesión
+    if (localStorage.getItem('vanilla_demo') === 'true') {
+      currentUser = { id_usuario: 1, nombre: 'Usuario Demo (Sin Servidor)', correo: 'demo@financontrol.co' };
+      initApp();
+    } else {
+      fetch('/api/auth/me').then(r => r.json()).then(d => {
+        if (d.usuario) { currentUser = d.usuario; initApp(); }
+      }).catch(() => {});
+    }
+  </script>
+</body>
+</html>

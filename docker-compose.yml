@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Servicio de Base de Datos Relacional PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: financontrol_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: financontrol
+      POSTGRES_USER: finanuser
+      POSTGRES_PASSWORD: finansecurepassword2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finanuser -d financontrol"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servicio Web Express FinanControl
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: financontrol_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://finanuser:finansecurepassword2026@postgres:5432/financontrol
+      JWT_SECRET: financontrol_production_jwt_secret_key_change_me_2026
+      APP_URL: http://localhost:3000
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  postgres_data:
+    driver: local
+  app_data:
+    driver: local

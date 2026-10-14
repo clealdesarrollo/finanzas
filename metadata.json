@@ -1,0 +1,6 @@
+{
+  "name": "FinanControl",
+  "description": "Sistema de gestión de finanzas personales con control de ingresos, gastos, presupuestos mensuales, metas de ahorro con abonos y alertas inteligentes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
